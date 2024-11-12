@@ -1,6 +1,5 @@
 ## WS2Cock
----
-A Weiss Scwarz card list creator for Cockatrice
+A Weiss Schwarz card list creator for Cockatrice
 
 ### Requirements
 - Python 3 + pip
