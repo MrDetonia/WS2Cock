@@ -3,7 +3,7 @@ import json
 import os
 import requests
 from types import SimpleNamespace
-from sanitize_filename import sanitize
+from pathvalidate import sanitize_filename
 import xml.etree.cElementTree as ET
 
 
@@ -38,11 +38,11 @@ def addSet(name, expansion):
     ET.SubElement(xmlSet, "settype").text = "Weiss:Schwarz"
 
 
-def addCard(card, grabArt=False):
+def addCard(card):
     print(f"Adding card: {card['name']}")
     # map card attributes to XML
     xmlCard = ET.SubElement(XmlCards, "card")
-    ET.SubElement(xmlCard, "name").text = sanitize(card["name"])
+    ET.SubElement(xmlCard, "name").text = sanitize_filename(card["name"])
 
     # build description
     abilities = ""
@@ -66,28 +66,31 @@ Power: {card['power']}"
     ET.SubElement(xmlCard, "set").text = f"{card['set']}/{card['release']}"
 
     # download card artwork (optional)
-    if grabArt:
-        print(f"Downloading artwork for: {card['name']}")
-        imgData = requests.get(card["image"]).content
+    if DL_ARTWORK:
+        target = f"./export/pics/{sanitize_filename(card['name'])}.png"
+        if not os.path.isfile(target):
+            print(f"Downloading: {target}")
+            imgData = requests.get(card["image"]).content
 
-        with open(f"./export/pics/{sanitize(card['name'])}.png", "wb") as file:
-            file.write(imgData)
+            with open(target, "wb") as file:
+                file.write(imgData)
+        else:
+            print(f"Skipping {target} - file exists.")
 
 
-def addCards(filename, grabArt=False):
+def addCards(filename):
     json = openJson(filename)
 
     # identify and add set
     print(f"Adding cards from: {json[0]['expansion']}")
-    if grabArt:
-        print("Warning: downloading card artworks! This will take some time.")
-        os.sleep(3)
+    if DL_ARTWORK:
+        print("WARNING: downloading card artworks! This could take some time.")
 
     addSet(f"{json[0]['set']}/{json[0]['release']}", json[0]["expansion"])
 
     # add all cards
     for card in json:
-        addCard(card, grabArt)
+        addCard(card)
 
     print(f"Done adding cards from: {json[0]['expansion']}")
 
@@ -102,7 +105,7 @@ def main():
     for filename in os.listdir(directory):
         file = os.path.join(directory, filename)
         if os.path.isfile(file):
-            addCards(file, grabArt=DL_ARTWORK)
+            addCards(file)
 
     # export XML
     xmlTree = ET.ElementTree(XmlRoot)
