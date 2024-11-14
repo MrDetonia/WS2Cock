@@ -12,7 +12,7 @@ A Weiss Schwarz card list creator for Cockatrice
 - (Optional) Set `DL_ARTWORK = True` to pull card artwork from official site.
 - `python WS2Cock.py`
 - export folder contains your cockatrice xml, and card artwork.
-- WeissSchwartz.xml goes in `%localappdata%\Cockatrice\Cockatrice\customsets`
+- WeissSchwarz.xml goes in `%localappdata%\Cockatrice\Cockatrice\customsets`
 - Contents of export/pics goes in `%localappdata%\Cockatrice\Cockatrice\pics\CUSTOM`
 - Open cockatrice, new sets should be available in the browser.
 
