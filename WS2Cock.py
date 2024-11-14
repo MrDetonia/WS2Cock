@@ -2,13 +2,17 @@ import datetime
 import json
 import os
 import requests
+import concurrent.futures
 from types import SimpleNamespace
 from pathvalidate import sanitize_filename
 import xml.etree.cElementTree as ET
 
 
 # CHANGE THIS TO PULL CARD ARTWORKS FROM OFFICIAL WEBSITE
-DL_ARTWORK = False
+DL_ARTWORK = True
+
+# CHANGE THIS TO DETERMINE HOW MANY THREADS TO CREATE FOR ADDING CARDS / DOWNLOADING ART
+DL_THREADS = 4
 
 
 XmlRoot = ET.Element("cockatrice_carddatabase", version="4")
@@ -78,6 +82,16 @@ Power: {card['power']}"
             print(f"Skipping {target} - file exists.")
 
 
+def addCardsWorker(cards):
+    for card in cards:
+        addCard(card)
+
+
+def chunkList(list, chunks):
+    for i in range(0, len(list), chunks):
+        yield list[i:i+chunks]
+
+
 def addCards(filename):
     json = openJson(filename)
 
@@ -89,8 +103,10 @@ def addCards(filename):
     addSet(f"{json[0]['set']}/{json[0]['release']}", json[0]["expansion"])
 
     # add all cards
-    for card in json:
-        addCard(card)
+    cards = chunkList(json, DL_THREADS)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=DL_THREADS) as executor:
+        executor.map(addCardsWorker, cards)
 
     print(f"Done adding cards from: {json[0]['expansion']}")
 
