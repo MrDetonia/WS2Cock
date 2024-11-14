@@ -82,16 +82,6 @@ Power: {card['power']}"
             print(f"Skipping {target} - file exists.")
 
 
-def addCardsWorker(cards):
-    for card in cards:
-        addCard(card)
-
-
-def chunkList(list, chunks):
-    for i in range(0, len(list), chunks):
-        yield list[i:i+chunks]
-
-
 def addCards(filename):
     json = openJson(filename)
 
@@ -103,10 +93,8 @@ def addCards(filename):
     addSet(f"{json[0]['set']}/{json[0]['release']}", json[0]["expansion"])
 
     # add all cards
-    cards = chunkList(json, DL_THREADS)
-
     with concurrent.futures.ThreadPoolExecutor(max_workers=DL_THREADS) as executor:
-        executor.map(addCardsWorker, cards)
+        executor.map(addCard, json)
 
     print(f"Done adding cards from: {json[0]['expansion']}")
 
@@ -127,7 +115,7 @@ def main():
     xmlTree = ET.ElementTree(XmlRoot)
     ET.indent(xmlTree, space="  ", level=0)
     xmlTree.write("./export/WeissSchwarz.xml", encoding="utf-8")
-    print(xmlTree)
+    print("Done! Cockatrice set available in ./export")
 
 
 if __name__ == "__main__":
